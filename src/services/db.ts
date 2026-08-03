@@ -282,6 +282,7 @@ export const dbService = {
           createdAt: data.qr.created_at || new Date().toISOString(),
           activatedAt: data.qr.activated_at || new Date().toISOString(),
           scanCount: data.qr.scan_count || 0,
+          stickerPrinted: data.qr.sticker_printed ?? false,
         };
 
         // Sync local cache
@@ -361,6 +362,7 @@ export const dbService = {
       createdAt: new Date().toISOString(),
       activatedAt: new Date().toISOString(),
       scanCount: qrIndex !== -1 ? cache.qrs[qrIndex].scanCount : 0,
+      stickerPrinted: qrIndex !== -1 ? (cache.qrs[qrIndex].stickerPrinted ?? false) : false,
     };
 
     if (qrIndex !== -1) cache.qrs[qrIndex] = qr;
@@ -529,6 +531,7 @@ export const dbService = {
       userId: null,
       createdAt: new Date().toISOString(),
       scanCount: 0,
+      stickerPrinted: false,
     }));
 
     try {

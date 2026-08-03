@@ -5,6 +5,7 @@ import { Search, ExternalLink, Printer, QrCode, CheckCircle2, ShieldAlert, Trash
 import { AppleCard } from '../layout/AppleCard';
 import { dbService } from '../../services/db';
 import { downloadQRStickerPNG } from '../../utils/qrStickerDownload';
+import { QRCodeItem } from '../../types';
 
 interface AdminTablesProps {
   onScanQR: (qrCodeId: string) => void;
@@ -29,7 +30,7 @@ export const AdminTables: React.FC<AdminTablesProps> = ({ onScanQR, refreshKey }
 
   const [tableRefresh, setTableRefresh] = useState(0);
 
-  const allQRs = mounted ? dbService.getAllQRs() : [];
+  const allQRs: QRCodeItem[] = mounted ? dbService.getAllQRs() : [];
   const userList = mounted ? dbService.getAllUsersWithVehicles() : [];
 
   // Helper mapping for active QR owners and vehicles
