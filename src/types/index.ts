@@ -28,6 +28,7 @@ export interface QRCodeItem {
   createdAt: string;
   activatedAt?: string | null;
   scanCount: number;
+  stickerPrinted?: boolean;
 }
 
 export interface QRScanLog {
