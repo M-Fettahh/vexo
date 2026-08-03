@@ -1,0 +1,7 @@
+'use client';
+
+import App from '../../App';
+
+export default function AdminRoutePage() {
+  return <App initialView="admin" />;
+}
