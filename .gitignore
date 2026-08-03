@@ -1,8 +1,24 @@
+# Dependencies
 node_modules/
+
+# Next.js
+.next/
+out/
+
+# Build
 build/
 dist/
 coverage/
-.DS_Store
+
+# Logs
 *.log
+
+# System
+.DS_Store
+
+# Environment
 .env*
 !.env.example
+
+# Vercel
+.vercel/

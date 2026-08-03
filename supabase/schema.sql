@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS public.qrs (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     activated_at TIMESTAMPTZ,
     scan_count INTEGER NOT NULL DEFAULT 0,
+    sticker_printed BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT constraint_qrs_code_unique UNIQUE (qr_code_id),
     CONSTRAINT constraint_qrs_status_check CHECK (status IN ('unassigned', 'active', 'disabled')),
     CONSTRAINT fk_qrs_vehicle FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id) ON DELETE SET NULL,

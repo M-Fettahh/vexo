@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
           createdAt: qrRow.created_at || new Date().toISOString(),
           activatedAt: qrRow.activated_at || null,
           scanCount: qrRow.scan_count || 0,
+          stickerPrinted: qrRow.sticker_printed ?? false,
         };
 
         let formattedUser = null;
@@ -292,11 +293,28 @@ export async function POST(req: NextRequest) {
           user_id: null,
           vehicle_id: null,
           scan_count: 0,
+          sticker_printed: false,
           created_at: new Date().toISOString(),
         }));
 
         const { error } = await supabase.from('qrs').upsert(rows);
         return NextResponse.json({ success: !error, rows, error: error?.message });
+      }
+
+      case 'UPDATE_STICKER_PRINTED': {
+        const { qrCodeId, stickerPrinted } = payload || {};
+        if (!qrCodeId) {
+          return NextResponse.json({ success: false, error: 'qrCodeId is required' }, { status: 400 });
+        }
+        const { error } = await supabase
+          .from('qrs')
+          .update({ sticker_printed: stickerPrinted })
+          .or(`qr_code_id.eq.${qrCodeId},id.eq.${qrCodeId}`);
+        if (error) {
+          console.error('UPDATE_STICKER_PRINTED error:', error);
+          return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+        }
+        return NextResponse.json({ success: true });
       }
 
       case 'DELETE_QR': {

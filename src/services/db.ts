@@ -62,6 +62,7 @@ export async function syncFromSupabase() {
         createdAt: row.created_at || new Date().toISOString(),
         activatedAt: row.activated_at || null,
         scanCount: row.scan_count || 0,
+        stickerPrinted: row.sticker_printed ?? false,
       }));
 
       cache.scans = (data.scans || []).map((row: any) => ({
@@ -543,6 +544,27 @@ export const dbService = {
     }
 
     return newQRs;
+  },
+
+  // Update sticker_printed state in Supabase & memory cache
+  async updateStickerPrinted(qrCodeId: string, stickerPrinted: boolean): Promise<boolean> {
+    const target = cache.qrs.find(q => q.qrCodeId === qrCodeId || q.id === qrCodeId);
+    if (target) {
+      target.stickerPrinted = stickerPrinted;
+    }
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({ action: 'UPDATE_STICKER_PRINTED', payload: { qrCodeId, stickerPrinted } }),
+      });
+      const data = await res.json();
+      return data.success;
+    } catch (err) {
+      console.error('updateStickerPrinted error:', err);
+      return false;
+    }
   },
 
   // Delete a QR code (Admin) -> Persisted to Supabase
