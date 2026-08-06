@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Sparkles, Check, Printer } from 'lucide-react';
+import { Plus, Sparkles, Check, Printer, AlertCircle } from 'lucide-react';
 import { AppleCard } from '../layout/AppleCard';
 import { dbService } from '../../services/db';
 import { generatePrintablePDF } from '../../utils/pdfGenerator';
@@ -16,18 +16,38 @@ export const AdminQRBatch: React.FC<AdminQRBatchProps> = ({ onQRsUpdated }) => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [lastGeneratedQRs, setLastGeneratedQRs] = useState<QRCodeItem[]>([]);
   const [isPdfLoading, setIsPdfLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (generateCount <= 0 || generateCount > 500) return;
 
     setIsGenerating(true);
+    setError(null);
+    setLastGeneratedQRs([]);
+
     try {
-      const newBatch = await dbService.generateBulkQRs(generateCount);
-      setLastGeneratedQRs(newBatch);
+      // 1. ÖNCE: INSERT veritabanına yapılır
+      const result = await dbService.generateBulkQRs(generateCount);
+
+      if (!result.success || result.qrs.length === 0) {
+        setError(result.error || 'QR kodlar veritabanına kaydedilemedi.');
+        return;
+      }
+
+      // 2. SONRA: INSERT başarılı olduysa PDF oluşturulur
+      try {
+        await generatePrintablePDF(result.qrs.map(q => q.qrCodeId), 'VEXO QR Sticker Baski Sayfasi');
+      } catch (pdfErr) {
+        console.error('PDF indirme hatası:', pdfErr);
+      }
+
+      // 3. SONRA: Başarı mesajı gösterilir & tablo güncellenir
+      setLastGeneratedQRs(result.qrs);
       onQRsUpdated();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(err.message || 'QR kodlar oluşturulurken beklenmeyen bir hata oluştu.');
     } finally {
       setIsGenerating(false);
     }
@@ -106,6 +126,14 @@ export const AdminQRBatch: React.FC<AdminQRBatchProps> = ({ onQRsUpdated }) => {
           <span>{isGenerating ? 'Oluşturuluyor...' : `${generateCount} Adet QR Üret`}</span>
         </button>
       </form>
+
+      {/* Error Message */}
+      {error && (
+        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 text-xs font-semibold flex items-center gap-2 animate-fadeIn">
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* Generated Results & PDF Export Bar */}
       {lastGeneratedQRs.length > 0 && (

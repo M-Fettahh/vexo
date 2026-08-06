@@ -285,7 +285,10 @@ export async function POST(req: NextRequest) {
       }
 
       case 'GENERATE_BULK_QRS': {
-        const { qrs } = payload;
+        const { qrs } = payload || {};
+        if (!qrs || !Array.isArray(qrs) || qrs.length === 0) {
+          return NextResponse.json({ success: false, error: 'Oluşturulacak QR listesi bulunamadı.' }, { status: 400 });
+        }
         const rows = qrs.map((q: any) => ({
           id: uuidv4(),
           qr_code_id: q.qrCodeId,
@@ -297,8 +300,15 @@ export async function POST(req: NextRequest) {
           created_at: new Date().toISOString(),
         }));
 
-        const { error } = await supabase.from('qrs').upsert(rows);
-        return NextResponse.json({ success: !error, rows, error: error?.message });
+        console.log(`[GENERATE_BULK_QRS] Inserting ${rows.length} rows into Supabase...`);
+        const { data, error } = await supabase.from('qrs').upsert(rows).select();
+
+        if (error) {
+          console.error('[GENERATE_BULK_QRS] Supabase insert error:', error);
+          return NextResponse.json({ success: false, error: 'Supabase kayıt hatası: ' + error.message }, { status: 400 });
+        }
+
+        return NextResponse.json({ success: true, rows: data || rows });
       }
 
       case 'UPDATE_STICKER_PRINTED': {
@@ -340,23 +350,6 @@ export async function POST(req: NextRequest) {
         await supabase.from('qrs').update({ status: 'unassigned', user_id: null, vehicle_id: null }).eq('user_id', userId);
         const { error } = await supabase.from('profiles').delete().eq('id', userId);
         return NextResponse.json({ success: !error, error: error?.message });
-      }
-
-      case 'FETCH_ALL': {
-        const [profilesRes, vehiclesRes, qrsRes, scansRes] = await Promise.all([
-          supabase.from('profiles').select('*'),
-          supabase.from('vehicles').select('*'),
-          supabase.from('qrs').select('*'),
-          supabase.from('scans').select('*'),
-        ]);
-
-        return NextResponse.json({
-          success: true,
-          profiles: profilesRes.data || [],
-          vehicles: vehiclesRes.data || [],
-          qrs: qrsRes.data || [],
-          scans: scansRes.data || [],
-        });
       }
 
       case 'LOG_SCAN': {

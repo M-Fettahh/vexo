@@ -520,7 +520,7 @@ export const dbService = {
   },
 
   // Generate batch QR codes (Admin) -> Persisted to Supabase
-  async generateBulkQRs(count: number): Promise<QRCodeItem[]> {
+  async generateBulkQRs(count: number): Promise<{ success: boolean; qrs: QRCodeItem[]; error?: string }> {
     const batchIds = generateBatchQRIds(count);
 
     const newQRs: QRCodeItem[] = batchIds.map(codeId => ({
@@ -535,18 +535,34 @@ export const dbService = {
     }));
 
     try {
-      await fetch('/api/db', {
+      const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store',
         body: JSON.stringify({ action: 'GENERATE_BULK_QRS', payload: { qrs: newQRs } }),
       });
-      await syncFromSupabase();
-    } catch (err) {
-      console.error('generateBulkQRs error:', err);
-    }
 
-    return newQRs;
+      if (!res.ok) {
+        const errText = await res.text();
+        let errMsg = 'Sunucu yanıt vermedi.';
+        try {
+          const parsed = JSON.parse(errText);
+          errMsg = parsed.error || errMsg;
+        } catch (_) {}
+        return { success: false, qrs: [], error: errMsg };
+      }
+
+      const data = await res.json();
+      if (!data.success) {
+        return { success: false, qrs: [], error: data.error || 'Supabase veritabanına kayıt yapılamadı.' };
+      }
+
+      await syncFromSupabase();
+      return { success: true, qrs: newQRs };
+    } catch (err: any) {
+      console.error('generateBulkQRs error:', err);
+      return { success: false, qrs: [], error: err.message || 'Veritabanı bağlantı hatası.' };
+    }
   },
 
   // Update sticker_printed state in Supabase & memory cache
