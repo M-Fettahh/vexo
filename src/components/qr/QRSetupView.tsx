@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { User, Phone, Lock, Car, Sparkles, AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { User, Phone, Lock, Car, Sparkles, AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff, Check } from 'lucide-react';
 import { dbService } from '../../services/db';
 import { validateTurkishPlate, validatePhone10, validateFullName } from '../../utils/qrGenerator';
+import { UserProfile } from '../../types';
 
 interface QRSetupViewProps {
   qrCodeId: string;
-  onSetupSuccess: () => void;
+  onSetupSuccess: (user?: UserProfile) => void;
   onNavigateHome: () => void;
 }
 
@@ -23,6 +24,7 @@ export const QRSetupView: React.FC<QRSetupViewProps> = ({
   const [plateNumber, setPlateNumber] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,24 +52,66 @@ export const QRSetupView: React.FC<QRSetupViewProps> = ({
 
     setLoading(true);
 
-    setTimeout(() => {
-      const res = dbService.registerQRCode({
-        qrCodeId,
-        fullName: fullName.trim(),
-        phone: phone.trim(),
-        password,
-        plateNumber: plateNumber.trim(),
-      });
+    (async () => {
+      try {
+        const res = await dbService.registerQRCodeAsync({
+          qrCodeId,
+          fullName: fullName.trim(),
+          phone: phone.trim(),
+          password,
+          plateNumber: plateNumber.trim(),
+        });
 
-      setLoading(false);
+        setLoading(false);
 
-      if (res.success) {
-        onSetupSuccess();
-      } else {
-        setError(res.error || 'Kurulum yapılamadı.');
+        if (res.success && res.user) {
+          setIsSuccess(true);
+          setTimeout(() => {
+            onSetupSuccess(res.user);
+          }, 2500);
+        } else {
+          setError(res.error || 'Kurulum yapılamadı.');
+        }
+      } catch (err: any) {
+        setLoading(false);
+        setError(err.message || 'Bir hata oluştu.');
       }
-    }, 400);
+    })();
   };
+
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen bg-[#F7F8FA] dark:bg-[#09090B] text-zinc-900 dark:text-zinc-100 flex flex-col items-center justify-center p-4 sm:p-6 relative transition-colors duration-200">
+        <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-[32px] p-8 text-center space-y-6 shadow-xl relative animate-fadeIn">
+          
+          {/* Animated Green Checkmark Badge */}
+          <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full bg-emerald-500/20 dark:bg-emerald-500/10 animate-ping" />
+            <div className="w-20 h-20 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30">
+              <Check className="w-10 h-10 stroke-[3]" />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
+              Kurulum Başarıyla Tamamlandı
+            </h2>
+            <p className="text-xs sm:text-sm font-medium text-zinc-600 dark:text-zinc-300 leading-relaxed">
+              QR kodunuz aktif ediliyor...
+              <br />
+              Lütfen birkaç saniye bekleyin.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 text-emerald-800 dark:text-emerald-300 text-xs font-semibold flex items-center justify-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Kullanıcı panelinize yönlendiriliyorsunuz...</span>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F7F8FA] dark:bg-[#09090B] text-zinc-900 dark:text-zinc-100 flex flex-col items-center justify-center p-4 sm:p-6 relative transition-colors duration-200">

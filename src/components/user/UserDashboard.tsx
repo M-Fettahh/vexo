@@ -157,7 +157,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   </button>
 
                   <button
-                    onClick={handleDownloadQR}
+                    onClick={() => primaryQR && downloadQRStickerPNG(primaryQR.qrCodeId)}
                     className="py-3.5 px-4 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold text-xs hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all flex items-center justify-center gap-2 border border-zinc-200 dark:border-zinc-700 cursor-pointer"
                     id="btn-user-download-qr"
                   >
@@ -304,10 +304,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               </button>
 
               <button
-                onClick={handleDownloadQR}
-                className="w-full py-3.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold text-xs hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                onClick={() => downloadQRStickerPNG(primaryQR.qrCodeId)}
+                className="w-full py-3.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold text-xs hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors flex items-center justify-center gap-2 cursor-pointer border border-zinc-200 dark:border-zinc-700"
+                id="btn-modal-download-qr"
               >
-                Görseli İndir
+                <Download className="w-4 h-4" />
+                <span>QR İndir</span>
               </button>
             </div>
           </div>

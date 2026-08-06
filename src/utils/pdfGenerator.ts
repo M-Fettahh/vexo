@@ -1,4 +1,3 @@
-import { jsPDF } from 'jspdf';
 import { APP_CONFIG } from '../config/appConfig';
 
 /**
@@ -9,7 +8,9 @@ export async function generatePrintablePDF(
   qrCodes: string[],
   title: string = 'VEXO QR Sticker Baski Sayfasi'
 ) {
-  if (qrCodes.length === 0) return;
+  if (qrCodes.length === 0 || typeof window === 'undefined') return;
+
+  const { jsPDF } = await import('jspdf');
 
   // Create A4 PDF in portrait mode
   const doc = new jsPDF({

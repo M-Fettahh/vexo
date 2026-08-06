@@ -191,14 +191,17 @@ function MainContent({ initialCode, initialView }: AppProps) {
           /* STATUS UNASSIGNED: Render QRSetupView */
           <QRSetupView
             qrCodeId={scannedQRId}
-            onSetupSuccess={async () => {
-              // Immediately fetch fresh status from Supabase so status becomes 'active'
-              setQrLoading(true);
-              const freshDetails = await dbService.getQROwnerDetailsAsync(scannedQRId);
-              setQrDetails(freshDetails);
-              setQrLoading(false);
+            onSetupSuccess={(newUser) => {
+              const loggedInUser = newUser || dbService.getCurrentUser();
+              if (loggedInUser) {
+                dbService.setCurrentUser(loggedInUser);
+                setCurrentUser(loggedInUser);
+              }
+              setScannedQRId(null);
+              setQrDetails(null);
+              setActiveView('panel');
               if (typeof window !== 'undefined' && window.history) {
-                window.history.replaceState({}, '', `/q/${scannedQRId}`);
+                window.history.pushState({}, '', '/panel');
               }
             }}
             onNavigateHome={() => {
