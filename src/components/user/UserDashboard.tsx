@@ -17,8 +17,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   onScanQR,
 }) => {
   const [mounted, setMounted] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(true);
+
   useEffect(() => {
     setMounted(true);
+    dbService.syncFromSupabase().finally(() => {
+      setIsSyncing(false);
+    });
   }, []);
 
   const currentUser = mounted ? dbService.getCurrentUser() : null;
@@ -34,11 +39,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   const [newPassword, setNewPassword] = useState('');
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Initialize name input only when edit modal opens
   useEffect(() => {
-    if (currentUser) {
+    if (editNameModalOpen && currentUser) {
       setNewFullName(currentUser.fullName);
     }
-  }, [currentUser]);
+  }, [editNameModalOpen]);
 
   if (!currentUser) return null;
 
@@ -49,7 +55,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
   const handleNameUpdate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newFullName.trim()) {
+    if (newFullName.trim() && currentUser) {
       dbService.updateUserProfile(currentUser.id, newFullName.trim());
       setStatusMsg({ type: 'success', text: 'İsminiz başarıyla güncellendi.' });
       setEditNameModalOpen(false);
@@ -166,6 +172,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   </button>
                 </div>
               </>
+            ) : isSyncing ? (
+              <div className="text-center py-8 space-y-3">
+                <div className="w-8 h-8 border-3 border-zinc-200 dark:border-zinc-800 border-t-zinc-950 dark:border-t-white rounded-full animate-spin mx-auto" />
+                <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Araç Bilgileri Yükleniyor...</p>
+              </div>
             ) : (
               <div className="text-center py-6 space-y-3 text-zinc-400">
                 <Car className="w-10 h-10 mx-auto text-zinc-300 dark:text-zinc-700" />

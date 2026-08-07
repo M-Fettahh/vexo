@@ -124,7 +124,7 @@ export const Hero: React.FC<HeroProps> = ({
                   {/* QR Image Mockup */}
                   <div className="relative mx-auto w-36 h-36 bg-white p-3 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-700 flex items-center justify-center">
                     <img
-                      src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://vexo.app/q/Q7XaP9LmR4Tk8WnB&color=09090b&bgcolor=ffffff"
+                      src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://vexosticker.vercel.app/q/rKc834QlGkA9hzJb&color=09090b&bgcolor=ffffff"
                       alt="VEXO Sticker QR"
                       className="w-full h-full object-contain"
                     />

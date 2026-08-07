@@ -123,14 +123,8 @@ function MainContent({ initialCode, initialView }: AppProps) {
   };
 
   const handleOpenQRTest = () => {
-    // Open active sample QR directly from Supabase list
-    const allQRs = dbService.getAllQRs();
-    const activeQR = allQRs.find(q => q.status === 'active' && q.userId)?.qrCodeId;
-    if (activeQR) {
-      handleScanQR(activeQR);
-    } else if (allQRs.length > 0) {
-      handleScanQR(allQRs[0].qrCodeId);
-    }
+    // Always navigate directly to demo QR: rKc834QlGkA9hzJb
+    handleScanQR('rKc834QlGkA9hzJb');
   };
 
   const handleLogout = () => {
